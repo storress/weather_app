@@ -18,14 +18,16 @@ class ForecastItemDtoModel {
 
   factory ForecastItemDtoModel.fromJson(Map<String, dynamic> json) {
     return ForecastItemDtoModel(
-      dt: json['dt'] as int,
-      main: TimestampWeatherDtoModel.fromJson(json['main'] as Map<String, dynamic>),
-      weather: (json['weather'] as List<dynamic>)
-          .map((item) => GeneralWeatherDtoModel.fromJson(item as Map<String, dynamic>))
-          .toList(),
-      visibility: json['visibility'] as int,
-      pop: (json['pop'] as num).toDouble(),
-      dtTxt: json['dt_txt'] as String,
+      dt: json['dt'] as int? ?? 0,
+      main: TimestampWeatherDtoModel.fromJson(json['main'] as Map<String, dynamic>? ?? {}),
+      weather:
+          (json['weather'] as List<dynamic>?)
+              ?.map((item) => GeneralWeatherDtoModel.fromJson(item as Map<String, dynamic>))
+              .toList() ??
+          [],
+      visibility: json['visibility'] as int? ?? 0,
+      pop: (json['pop'] as num?)?.toDouble() ?? 0.0,
+      dtTxt: json['dt_txt'] as String? ?? '',
     );
   }
 }
@@ -53,14 +55,14 @@ class TimestampWeatherDtoModel {
 
   factory TimestampWeatherDtoModel.fromJson(Map<String, dynamic> json) {
     return TimestampWeatherDtoModel(
-      temp: (json['temp'] as num).toDouble(),
-      feelsLike: (json['feels_like'] as num).toDouble(),
-      tempMin: (json['temp_min'] as num).toDouble(),
-      tempMax: (json['temp_max'] as num).toDouble(),
-      pressure: json['pressure'] as int,
-      humidity: json['humidity'] as int,
-      seaLevel: json['sea_level'] as int,
-      grndLevel: json['grnd_level'] as int,
+      temp: (json['temp'] as num?)?.toDouble() ?? 0.0,
+      feelsLike: (json['feels_like'] as num?)?.toDouble() ?? 0.0,
+      tempMin: (json['temp_min'] as num?)?.toDouble() ?? 0.0,
+      tempMax: (json['temp_max'] as num?)?.toDouble() ?? 0.0,
+      pressure: json['pressure'] as int? ?? 0,
+      humidity: json['humidity'] as int? ?? 0,
+      seaLevel: json['sea_level'] as int? ?? 0,
+      grndLevel: json['grnd_level'] as int? ?? 0,
     );
   }
 }
@@ -75,10 +77,10 @@ class GeneralWeatherDtoModel {
 
   factory GeneralWeatherDtoModel.fromJson(Map<String, dynamic> json) {
     return GeneralWeatherDtoModel(
-      id: json['id'] as int,
-      main: json['main'] as String,
-      description: json['description'] as String,
-      icon: json['icon'] as String,
+      id: json['id'] as int? ?? 0,
+      main: json['main'] as String? ?? '',
+      description: json['description'] as String? ?? '',
+      icon: json['icon'] as String? ?? '',
     );
   }
 }

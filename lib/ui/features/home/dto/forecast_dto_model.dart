@@ -17,13 +17,15 @@ class ForecastDtoModel {
 
   factory ForecastDtoModel.fromJson(Map<String, dynamic> json) {
     return ForecastDtoModel(
-      cod: json['cod'] as String,
-      message: json['message'] as int,
-      cnt: json['cnt'] as int,
-      list: (json['list'] as List<dynamic>)
-          .map((item) => ForecastItemDtoModel.fromJson(item as Map<String, dynamic>))
-          .toList(),
-      city: City.fromJson(json['city'] as Map<String, dynamic>),
+      cod: json['cod'] as String? ?? '',
+      message: json['message'] as int? ?? 0,
+      cnt: json['cnt'] as int? ?? 0,
+      list:
+          (json['list'] as List<dynamic>?)
+              ?.map((item) => ForecastItemDtoModel.fromJson(item as Map<String, dynamic>))
+              .toList() ??
+          [],
+      city: City.fromJson(json['city'] as Map<String, dynamic>? ?? {}),
     );
   }
 }
@@ -51,14 +53,14 @@ class City {
 
   factory City.fromJson(Map<String, dynamic> json) {
     return City(
-      id: json['id'] as int,
-      name: json['name'] as String,
-      coord: Coord.fromJson(json['coord'] as Map<String, dynamic>),
-      country: json['country'] as String,
-      population: json['population'] as int,
-      timezone: json['timezone'] as int,
-      sunrise: json['sunrise'] as int,
-      sunset: json['sunset'] as int,
+      id: json['id'] as int? ?? 0,
+      name: json['name'] as String? ?? '',
+      coord: Coord.fromJson(json['coord'] as Map<String, dynamic>? ?? {}),
+      country: json['country'] as String? ?? '',
+      population: json['population'] as int? ?? 0,
+      timezone: json['timezone'] as int? ?? 0,
+      sunrise: json['sunrise'] as int? ?? 0,
+      sunset: json['sunset'] as int? ?? 0,
     );
   }
 }
@@ -70,6 +72,6 @@ class Coord {
   Coord({required this.lat, required this.lon});
 
   factory Coord.fromJson(Map<String, dynamic> json) {
-    return Coord(lat: (json['lat'] as num).toDouble(), lon: (json['lon'] as num).toDouble());
+    return Coord(lat: (json['lat'] as num?)?.toDouble() ?? 0.0, lon: (json['lon'] as num?)?.toDouble() ?? 0.0);
   }
 }
