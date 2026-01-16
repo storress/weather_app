@@ -12,7 +12,6 @@ Install the provided apk: app-profile.apk
 
 ```bash
 flutter run --dart-define=OPENWEATHER_API_KEY=YOUR_API_KEY
-bash
 ```
 
 ### VS Code (launch.json)
