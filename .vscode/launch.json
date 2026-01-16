@@ -10,7 +10,7 @@
             "request": "launch",
             "type": "dart",
             "toolArgs": [
-                "--dart-define=OPENWEATHER_API_KEY=fb7a15194674e4cc231ee9ba5df957f4"
+                "--dart-define=OPENWEATHER_API_KEY=API KEY"
             ]
             
         },
@@ -20,7 +20,7 @@
             "type": "dart",
             "flutterMode": "profile",
             "toolArgs": [
-                "--dart-define=OPENWEATHER_API_KEY=fb7a15194674e4cc231ee9ba5df957f4"
+                "--dart-define=OPENWEATHER_API_KEY=API KEY"
             ]
         },
         {
@@ -29,7 +29,7 @@
             "type": "dart",
             "flutterMode": "release",
             "toolArgs": [
-                "--dart-define=OPENWEATHER_API_KEY=fb7a15194674e4cc231ee9ba5df957f4"
+                "--dart-define=OPENWEATHER_API_KEY=API KEY"
             ]
         }
     ]
