@@ -6,8 +6,8 @@ class SearchCityModel {
   final String stateCode;
   final double lat;
   final double lon;
-  final String display; // d
-  final String normalizedForSearchName; // s
+  final String display;
+  final String normalizedForSearchName;
 
   SearchCityModel({
     required this.id,

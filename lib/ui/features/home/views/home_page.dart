@@ -1,10 +1,11 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show rootBundle;
-import 'package:weather_app/ui/features/home/controller/home_controller.dart';
-import 'package:weather_app/ui/features/home/models/search_city_model.dart';
+import 'package:weather_app/core/constants/endpoints.dart';
+import 'package:weather_app/ui/features/home/controllers/home_controller.dart';
+import 'package:weather_app/ui/features/search/models/search_city_model.dart';
+import 'package:weather_app/ui/features/search/widgets/city_forecast_sheet.dart';
 import 'package:weather_app/ui/features/home/widgets/forecast_tab_widget.dart';
+import 'package:weather_app/ui/features/home/widgets/last_updated_widget.dart';
+import 'package:weather_app/ui/features/search/delegates/citiy_search_delegate.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -17,21 +18,19 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   late TabController _tabController;
   final HomeController _homeController = HomeController();
 
-  final List<String> _cities = ['Rio de Janeiro', 'Beijing', 'Los Angeles'];
   bool _isLoading = false;
-  List<SearchCityModel> _allCities = [];
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
     _tabController.addListener(_onTabChanged);
-    _loadForecast(_cities[0]);
+    _loadForecast(_homeController.tabCities[0]);
   }
 
   void _onTabChanged() {
     if (_tabController.indexIsChanging) {
-      _loadForecast(_cities[_tabController.index]);
+      _loadForecast(_homeController.tabCities[_tabController.index]);
     }
   }
 
@@ -45,24 +44,11 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     });
   }
 
-  Future<List<SearchCityModel>> _loadCities() async {
-    if (_allCities.isNotEmpty) return _allCities;
-
-    final raw = await rootBundle.loadString('assets/data/cities.min.json');
-    final List<dynamic> data = json.decode(raw) as List<dynamic>;
-    _allCities = data
-        .whereType<Map<String, dynamic>>()
-        .map((cityJson) => SearchCityModel.fromJson(cityJson))
-        .toList()
-        .cast<SearchCityModel>();
-    return _allCities;
-  }
-
-  Future<void> _onSearchPressed() async {
-    final cities = await _loadCities();
+  Future<void> onSearchPressed() async {
+    final cities = await _homeController.loadCities();
     if (!mounted) return;
 
-    final selectedCity = await showSearch<SearchCityModel?>(context: context, delegate: _CitySearchDelegate(cities));
+    final selectedCity = await showSearch<SearchCityModel?>(context: context, delegate: CitySearchDelegate(cities));
 
     if (selectedCity != null) {
       await _showCityForecastModal(selectedCity.name);
@@ -80,7 +66,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
     if (!mounted) return;
 
-    showModalBottomSheet(
+    await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -91,61 +77,22 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           minChildSize: 0.5,
           maxChildSize: 0.95,
           builder: (context, scrollController) {
-            return Container(
-              decoration: const BoxDecoration(
-                image: DecorationImage(
-                  image: NetworkImage('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1200'),
-                  fit: BoxFit.cover,
-                ),
-                borderRadius: BorderRadius.only(topLeft: Radius.circular(20), topRight: Radius.circular(20)),
-              ),
-              child: Column(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: const BoxDecoration(
-                      color: Colors.blueAccent,
-                      borderRadius: BorderRadius.only(topLeft: Radius.circular(20), topRight: Radius.circular(20)),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          cityName.toUpperCase(),
-                          style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.close, color: Colors.white),
-                          onPressed: () => Navigator.pop(context),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Expanded(
-                    child: ForecastTabWidget(
-                      forecastData: _homeController.forecastData,
-                      onRefresh: () => _homeController.loadForecast(cityName),
-                    ),
-                  ),
-                ],
-              ),
-            );
+            return CityForecastSheet(cityName: cityName, homeController: _homeController);
           },
         );
       },
     );
+
+    // Recargar la pestaña actual cuando se cierra el modal
+    if (mounted) {
+      await _loadForecast(_homeController.tabCities[_tabController.index]);
+    }
   }
 
   @override
   void dispose() {
     _tabController.dispose();
     super.dispose();
-  }
-
-  String _getLastUpdated() {
-    final now = DateTime.now();
-    final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    return 'Last updated on ${months[now.month - 1]} ${now.day} ${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
   }
 
   @override
@@ -156,7 +103,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         titleTextStyle: const TextStyle(color: Colors.white, fontSize: 20),
         backgroundColor: Colors.blueAccent,
         iconTheme: const IconThemeData(color: Colors.white),
-        actions: [IconButton(icon: const Icon(Icons.search), onPressed: _onSearchPressed)],
+        actions: [IconButton(icon: const Icon(Icons.search), onPressed: () => onSearchPressed())],
       ),
       body: Stack(
         children: [
@@ -173,32 +120,20 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
               Expanded(
                 child: Container(
                   decoration: const BoxDecoration(
-                    image: DecorationImage(
-                      image: NetworkImage('https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1200'),
-                      fit: BoxFit.cover,
-                    ),
+                    image: DecorationImage(image: NetworkImage(ApiEndpoints.backgroundImageUrl), fit: BoxFit.cover),
                   ),
                   child: TabBarView(
                     controller: _tabController,
-                    children: _cities.map((_) {
+                    children: _homeController.tabCities.map((_) {
                       return ForecastTabWidget(
                         forecastData: _homeController.forecastData,
-                        onRefresh: () => _loadForecast(_cities[_tabController.index]),
+                        onRefresh: () => _loadForecast(_homeController.tabCities[_tabController.index]),
                       );
                     }).toList(),
                   ),
                 ),
               ),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                decoration: const BoxDecoration(color: Colors.blueAccent),
-                alignment: Alignment.centerRight,
-                child: Text(
-                  _getLastUpdated(),
-                  style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w500),
-                ),
-              ),
+              LastUpdatedWidget(),
             ],
           ),
           if (_isLoading)
@@ -209,68 +144,5 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         ],
       ),
     );
-  }
-}
-
-class _CitySearchDelegate extends SearchDelegate<SearchCityModel?> {
-  _CitySearchDelegate(this.cities);
-
-  final List<SearchCityModel> cities;
-
-  List<SearchCityModel> _filtered(String query) {
-    if (query.isEmpty) return cities.take(50).toList();
-    final q = query.toLowerCase();
-    return cities.where((c) => c.normalizedForSearchName.contains(q)).take(50).toList();
-  }
-
-  @override
-  Widget buildSuggestions(BuildContext context) {
-    final results = _filtered(query);
-    return ListView.builder(
-      itemCount: results.length,
-      itemBuilder: (context, index) {
-        final city = results[index];
-        return ListTile(
-          leading: const Icon(Icons.location_city),
-          title: Text(city.display),
-          onTap: () => close(context, city),
-        );
-      },
-    );
-  }
-
-  @override
-  Widget buildResults(BuildContext context) {
-    final results = _filtered(query);
-    return ListView.builder(
-      itemCount: results.length,
-      itemBuilder: (context, index) {
-        final city = results[index];
-        return ListTile(
-          leading: const Icon(Icons.location_city),
-          title: Text(city.display),
-          onTap: () => close(context, city),
-        );
-      },
-    );
-  }
-
-  @override
-  List<Widget>? buildActions(BuildContext context) {
-    return [
-      if (query.isNotEmpty)
-        IconButton(
-          icon: const Icon(Icons.clear),
-          onPressed: () {
-            query = '';
-            showSuggestions(context);
-          },
-        ),
-    ];
-  }
-
-  @override
-  Widget? buildLeading(BuildContext context) {
-    return IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => close(context, null));
   }
 }

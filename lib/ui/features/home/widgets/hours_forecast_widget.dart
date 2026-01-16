@@ -1,52 +1,56 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:weather_app/core/constants/endpoints.dart';
 import 'package:weather_app/ui/features/home/dto/forecast_dto_model.dart';
+import 'package:weather_app/ui/features/home/mappers/hours_forecast_mapper.dart';
 
 class HoursForecastWidget extends StatelessWidget {
   const HoursForecastWidget({super.key, required this.forecastData});
 
   final ForecastDtoModel? forecastData;
 
-  List<Map<String, dynamic>> _processHourlyForecast() {
-    if (forecastData == null) {
-      return [];
-    }
-    final hourlyData = forecastData!.list.take(8).map((item) {
-      final temp = item.main.temp;
-      final time = item.dtTxt;
-      final hour = time.split(' ')[1].substring(0, 5); // Extract HH:MM
-      final pop = item.pop; // Probability of precipitation
-      final iconCode = item.weather[0].icon; // Icon code from API
+  // List<Map<String, dynamic>> _processHourlyForecast() {
+  //   if (forecastData == null) {
+  //     return [];
+  //   }
+  //   final hourlyData = forecastData!.list.take(8).map((item) {
+  //     final temp = item.main.temp;
+  //     final time = item.dtTxt;
+  //     final hour = time.split(' ')[1].substring(0, 5); // Extract HH:MM
+  //     final pop = item.pop; // Probability of precipitation
+  //     final iconCode = item.weather[0].icon; // Icon code from API
 
-      return {
-        'time': _formatTimeAmPm(hour),
-        'temp': '${temp.toStringAsFixed(0)}°',
-        'icon': iconCode,
-        'pop': '${(pop * 100).toStringAsFixed(0)}%',
-      };
-    }).toList();
+  //     return {
+  //       'time': _formatTimeAmPm(hour),
+  //       'temp': '${temp.toStringAsFixed(0)}°',
+  //       'icon': iconCode,
+  //       'pop': '${(pop * 100).toStringAsFixed(0)}%',
+  //     };
+  //   }).toList();
 
-    return hourlyData;
-  }
+  //   return hourlyData;
+  // }
 
-  String _formatTimeAmPm(String time) {
-    final parts = time.split(':');
-    int hour = int.parse(parts[0]);
-    final minute = parts[1];
+  // String _formatTimeAmPm(String time) {
+  //   final parts = time.split(':');
+  //   int hour = int.parse(parts[0]);
+  //   final minute = parts[1];
 
-    final period = hour >= 12 ? 'PM' : 'AM';
-    if (hour > 12) hour -= 12;
-    if (hour == 0) hour = 12;
+  //   final period = hour >= 12 ? 'PM' : 'AM';
+  //   if (hour > 12) hour -= 12;
+  //   if (hour == 0) hour = 12;
 
-    return '${hour.toString().padLeft(2, '0')}:$minute $period';
-  }
+  //   return '${hour.toString().padLeft(2, '0')}:$minute $period';
+  // }
 
-  String _getWeatherIconUrl(String iconCode) {
-    return 'https://openweathermap.org/img/wn/$iconCode@2x.png';
-  }
+  // String _getWeatherIconUrl(String iconCode) {
+  //   return 'https://openweathermap.org/img/wn/$iconCode@2x.png';
+  // }
 
   @override
   Widget build(BuildContext context) {
-    final displayData = _processHourlyForecast();
+    //final displayData = _processHourlyForecast();
+    final displayData = HoursForecastMapper.map(forecastData);
 
     return Container(
       margin: const EdgeInsets.all(16),
@@ -77,12 +81,15 @@ class HoursForecastWidget extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            hour['temp'] as String,
+                            '${hour.temperature.toStringAsFixed(0)}°',
                             style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                           ),
-                          Text(hour['pop'] as String, style: const TextStyle(fontSize: 14, color: Colors.lightBlue)),
+                          Text(
+                            '${(hour.precipitationProbability * 100).toStringAsFixed(0)}%',
+                            style: const TextStyle(fontSize: 14, color: Colors.lightBlue),
+                          ),
                           Image.network(
-                            _getWeatherIconUrl(hour['icon'] as String),
+                            ApiEndpoints.weatherIconUrl(hour.iconCode),
                             width: 48,
                             height: 48,
                             fit: BoxFit.contain,
@@ -91,7 +98,7 @@ class HoursForecastWidget extends StatelessWidget {
                             },
                           ),
                           Text(
-                            hour['time'] as String,
+                            DateFormat('hh:mm a').format(hour.dateTime),
                             style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.grey),
                           ),
                         ],
