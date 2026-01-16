@@ -4,6 +4,10 @@ A clean and modular **Flutter weather application** that displays **hourly** and
 
 ## Run the app
 
+### Install
+
+Install the provided apk: app-profile.apk
+
 ### From terminal
 
 ```bash
